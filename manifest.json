@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "My Chrome Extension",
+  "version": "1.0.0",
+  "description": "A basic Chrome extension",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icons/solar_system_icon_16.png",
+      "48": "images/icons/solar_system_icon_48.png",
+      "128": "images/icons/solar_system_icon_128.png"
+    }
+  },
+  "icons": {
+    "16": "images/icons/solar_system_icon_16.png",
+    "48": "images/icons/solar_system_icon_48.png",
+    "128": "images/icons/solar_system_icon_128.png"
+  },
+  "permissions": []
+}
