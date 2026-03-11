@@ -3,7 +3,7 @@
     "build:js": "esbuild src/index.tsx --bundle --outfile=dist/popup.js --format=iife",
     "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css",
     "build": "npm run build:js && npm run build:css",
-    "watch:js": "esbuild src/index.tsx --bundle --outfile=dist/popup.js --format=iife --watch",
+    "watch:js": "esbuild src/index.tsx --bundle --outfile=dist/popup.js --format=iife --watch=forever",
     "watch:css": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "watch": "npm run watch:js & npm run watch:css",
     "lint:html": "htmlhint *.html",
