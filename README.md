@@ -109,7 +109,6 @@ typescript_chrome_extension/
 ├── src/                # Source files
 │   ├── App.tsx         # Main React component
 │   ├── index.tsx       # React entry point
-│   ├── popup.ts        # TypeScript utility (example)
 │   └── input.css       # Tailwind CSS source
 ├── manifest.json       # Chrome extension manifest
 ├── popup.html          # Extension popup HTML
