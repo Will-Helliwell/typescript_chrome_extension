@@ -8,99 +8,182 @@ A Chrome extension built with React, TypeScript, and Tailwind CSS.
 - npm (v10.2.4 or higher)
 - Google Chrome browser
 
-## Installation
+## Quick Reference
 
-1. Clone the repository and navigate to the project directory
+Coming back to this project cold? This is the whole loop:
 
-2. Install dependencies:
+| I want to...                     | Command / action                                    |
+| -------------------------------- | --------------------------------------------------- |
+| Set up from scratch              | `npm install` → `npm run build` → load in Chrome    |
+| Develop with auto-rebuild        | `npm run watch` (leave running)                     |
+| See a code change in the browser | Reload the extension card at `chrome://extensions/` |
+| See the popup's console / errors | Right-click the extension icon → **Inspect popup**  |
+| Run the tests                    | `npm test`                                          |
+| Run tests continuously           | `npm run test:watch` (leave running)                |
+| Check everything before pushing  | `npm run lint && npm run type-check && npm test`    |
+
+Full detail on each of these below.
+
+## Getting Started
+
+Do this the first time you clone the project, or when returning after a long
+break.
+
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-3. Build the project:
+### 2. Build the extension
 
 ```bash
 npm run build
 ```
 
-## Development
+This produces the two files the extension actually loads:
 
-### Watch Mode
+- `dist/popup.js` — your bundled React/TypeScript code
+- `dist/output.css` — your compiled Tailwind CSS
 
-For active development, use watch mode to automatically rebuild when files change:
+Nothing will work until these exist, because `popup.html` references them
+directly.
+
+### 3. Load the extension into Chrome
+
+1. Open Chrome and go to `chrome://extensions/`
+2. Turn on **Developer mode** (toggle, top right)
+3. Click **Load unpacked**
+4. Select the **project root directory** — not the `dist/` folder. Chrome needs
+   `manifest.json`, which lives at the root.
+5. The extension icon appears in your toolbar. Pin it (puzzle-piece icon → pin)
+   so it stays visible.
+
+### 4. Confirm it works
+
+Click the extension icon. You should see the popup with a title, a click count,
+and a **Click Me** button. If you don't, jump to
+[Troubleshooting](#troubleshooting).
+
+You only do steps 1–3 once. From then on, you're in the development loop below.
+
+## The Development Loop
+
+### Start the watchers
+
+Leave this running in a terminal for your whole session:
 
 ```bash
 npm run watch
 ```
 
-This runs both the JavaScript and CSS watchers concurrently.
+It rebuilds `dist/popup.js` and `dist/output.css` automatically every time you
+save a file. It does **not** exit on its own — stop it with `Ctrl+C` when you're
+done.
 
-You can also run them separately:
+You can run the two halves separately if you only care about one:
 
 ```bash
 npm run watch:js   # Watch TypeScript/React files
 npm run watch:css  # Watch CSS files
 ```
 
-### Loading the Extension in Chrome
+### After each change: seeing the result
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode" (toggle in top right corner)
-3. Click "Load unpacked"
-4. Select the project directory
-5. The extension icon should appear in your toolbar
+This is the part that catches people out. **Saving a file is not enough** —
+the watcher rebuilds your code, but Chrome is still running the _old_ copy it
+loaded earlier. Every time you want to see a change:
 
-### Reloading Changes
+1. **Save the file.** Check the watcher terminal shows a rebuild with no errors.
+2. **Go to `chrome://extensions/` and click the reload icon** (circular arrow)
+   on this extension's card. This is the step that's easy to forget.
+3. **Click the extension icon** to open the popup and see your change.
 
-After making changes:
+If the popup was already open, close and reopen it — it does not live-refresh.
 
-1. The build will automatically run if you're using `npm run watch`
-2. Go to `chrome://extensions/`
-3. Click the reload icon on your extension card
-4. Click the extension icon to see your changes
+### Seeing errors and console output
 
-## Production Build
+The popup is its own little web page with its own console. `console.log` output
+and runtime errors go there, _not_ to the page you were looking at:
 
-To create a production build:
+> Right-click the extension icon → **Inspect popup**
+
+That opens DevTools attached to the popup. Keep it open while developing. Note
+that closing the popup closes DevTools with it.
+
+### Checking your work
+
+Run the test suite while you develop — it's much faster than reloading Chrome
+for things that don't need a browser:
 
 ```bash
-npm run build
+npm run test:watch   # re-runs affected tests as you save
 ```
 
-This will:
+Before committing or pushing, run the full set:
 
-- Bundle all React/TypeScript code into `dist/popup.js`
-- Compile Tailwind CSS into `dist/output.css`
+```bash
+npm run lint         # HTML + TypeScript linting
+npm run type-check   # TypeScript errors
+npm test             # full test suite
+```
 
-## Available Scripts
+The git hooks run these for you (see [Git Hooks](#git-hooks)), but running them
+yourself is faster than finding out at push time.
 
-### Build Commands
+## Troubleshooting
 
-- `npm run build` - Build both JavaScript and CSS
-- `npm run build:js` - Bundle React/TypeScript code
-- `npm run build:css` - Compile Tailwind CSS
+### The popup is blank, or the extension won't load
 
-### Watch Commands
+- Have you run `npm run build`? Check `dist/` exists and contains **both**
+  `popup.js` and `output.css`.
+- Did you select the **project root** when loading unpacked, not `dist/`?
+- Check the extension card at `chrome://extensions/` for a red **Errors**
+  button, and click it.
 
-- `npm run watch` - Watch both JavaScript and CSS files
-- `npm run watch:js` - Watch TypeScript/React files
-- `npm run watch:css` - Watch CSS files
+### My changes aren't showing up
 
-### Linting & Formatting
+In order of how often it's the cause:
 
-- `npm run lint` - Run all linters (HTML + TypeScript)
-- `npm run lint:html` - Lint HTML files with htmlhint
-- `npm run lint:ts` - Lint TypeScript/React files with ESLint
-- `npm run type-check` - Run TypeScript type checking
-- `npm run format` - Format all files with Prettier
-- `npm run format:check` - Check if files are formatted correctly
+1. **You didn't reload the extension.** Go to `chrome://extensions/` and click
+   the reload icon on the card. Saving the file alone never updates Chrome.
+2. **The popup was already open.** Close and reopen it.
+3. **The watcher isn't running, or it errored.** Check the terminal running
+   `npm run watch` for a build error — a TypeScript error stops the rebuild, so
+   Chrome keeps serving the last good bundle.
+4. **Tailwind isn't picking up your classes.** `tailwind.config.js` only scans
+   the paths listed in its `content` array. A new file outside those paths gets
+   no CSS generated for it.
 
-### Testing
+### A `chrome.*` call works in tests but fails in the browser
 
-- `npm test` - Run the full test suite once
-- `npm run test:watch` - Re-run affected tests as files change
-- `npm run test:coverage` - Run the suite and write a coverage report to `coverage/`
+Check `manifest.json`. Extension APIs need to be declared in `permissions`
+before Chrome will allow them at runtime.
+
+`permissions` is currently **empty**, so the `chrome.storage` example in
+`src/utils/storage.ts` will throw if you actually call it in the browser. To use
+it for real, add:
+
+```json
+"permissions": ["storage"]
+```
+
+then reload the extension. The test mock deliberately doesn't enforce
+permissions — it tests your logic, not Chrome's rules — so this class of problem
+only shows up when you run the real thing.
+
+### Tests are extremely slow the first time
+
+Expected. `ts-jest` compiles everything from cold on the first run, which can
+take 30 seconds or more. Subsequent runs use a cache and take a second or two.
+It is not hung.
+
+### Build errors after pulling changes
+
+- Run `npm install` — a dependency was probably added.
+- Failing that, delete `node_modules/` and `package-lock.json`, then run
+  `npm install` again.
+- Ensure you're on Node.js v20.11.1 or higher (`node -v`).
 
 ## Testing
 
@@ -150,7 +233,8 @@ it('increments the count on click', async () => {
 
 ### Testing code that uses Chrome APIs
 
-`jsdom` has no `chrome` object, so `tests/setup.ts` installs a typed mock as
+Tests run in Node, not in Chrome, so there is no real `chrome` object — any code
+touching `chrome.*` would throw. `tests/setup.ts` installs a typed mock as
 `globalThis.chrome` before every test. Import `chromeMock` to configure calls
 and make assertions:
 
@@ -173,12 +257,45 @@ this template uses. To stub another API, add it to `ChromeMock` and
 `createChromeMock()` in [`tests/mocks/chrome.ts`](tests/mocks/chrome.ts),
 following the existing shape of one `jest.fn()` per method.
 
+These tests prove your own logic is right. They can't catch a misunderstanding
+of how Chrome really behaves — including missing `manifest.json` permissions —
+so still load the extension and try it for anything browser-dependent.
+
 ### Notes
 
 - `ts-jest` type-checks each test file as it runs, so `npm test` catches type
   errors as well as assertion failures. `jest.config.js` documents how to switch
   to transpile-only if the suite ever gets slow.
 - `src/index.tsx` is excluded from coverage: it only mounts React into the DOM.
+
+## Available Scripts
+
+### Build Commands
+
+- `npm run build` - Build both JavaScript and CSS
+- `npm run build:js` - Bundle React/TypeScript code
+- `npm run build:css` - Compile Tailwind CSS
+
+### Watch Commands
+
+- `npm run watch` - Watch both JavaScript and CSS files
+- `npm run watch:js` - Watch TypeScript/React files
+- `npm run watch:css` - Watch CSS files
+
+### Testing
+
+- `npm test` - Run the full test suite once
+- `npm run test:watch` - Re-run affected tests as files change
+- `npm run test:coverage` - Run the suite and write a coverage report to `coverage/`
+
+### Linting & Formatting
+
+- `npm run lint` - Run all linters (HTML + TypeScript)
+- `npm run lint:html` - Lint HTML files with htmlhint
+- `npm run lint:ts` - Lint TypeScript/React files with ESLint
+- `npm run type-check` - Run TypeScript type checking
+- `npm run format` - Format all files with Prettier
+- `npm run format:check` - Check if files are formatted correctly
 
 ## Project Structure
 
@@ -259,20 +376,3 @@ coverage, and a production build.
 - `tsconfig.json` - TypeScript compiler options
 - `tailwind.config.js` - Tailwind CSS content paths and theme
 - `postcss.config.js` - PostCSS plugins configuration
-
-## Troubleshooting
-
-### Extension not loading
-
-- Ensure you've run `npm run build` before loading the extension
-- Check that the `dist/` directory exists and contains `popup.js` and `output.css`
-
-### Changes not appearing
-
-- Make sure to reload the extension in `chrome://extensions/`
-- Check the browser console (right-click extension popup → Inspect) for errors
-
-### Build errors
-
-- Delete `node_modules/` and `package-lock.json`, then run `npm install` again
-- Ensure you're using Node.js v20.11.1 or higher
